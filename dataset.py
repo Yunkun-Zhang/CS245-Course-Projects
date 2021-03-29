@@ -11,7 +11,7 @@ def read(path='Animals_with_Attributes2/Features/ResNet101'):
 
 def divide_data(save_path='data', test=0.4):
     X, y = read()
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=22400)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test)
     np.save(save_path + '/X_train', X_train)
     np.save(save_path + '/X_test', X_test)
     np.save(save_path + '/y_train', y_train)

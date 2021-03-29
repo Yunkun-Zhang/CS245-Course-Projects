@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
-def read(path='../Animals_with_Attributes2/Features/ResNet101'):
+def read(path='Animals_with_Attributes2/Features/ResNet101'):
     X = pd.read_csv(path + '/AwA2-features.txt', sep=' ', names=[f'feature{i}' for i in range(2048)])
     y = pd.read_csv(path + '/AwA2-labels.txt', names=['label'])
     return X, y
@@ -29,5 +29,6 @@ def load_data(path='data'):
 
 
 if __name__ == '__main__':
+    divide_data()
     x, _, y, _ = load_data()
     print(y)

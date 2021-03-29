@@ -45,13 +45,13 @@ def runGA():
     print("Starting GA")
     ga = GA(2048, 2, X, X_t, y, y_t)
     res = ga.update()
-    score = runSVM(svm_C, svm_k, X[:, res != 0], y, X_t[:, res != 0], y_t)
-    with open('result.txt', 'a') as f:
-        f.write(f'VAE score: {score} (kernel={svm_k})\n')
+    print(res)
+    # score = runSVM(svm_C, svm_k, X[:, res != 0], y, X_t[:, res != 0], y_t)
+    # with open('result.txt', 'a') as f:
+        # f.write(f'VAE score: {score} (kernel={svm_k})\n')
 
 
 if __name__ == '__main__':
-    args.method = 'vae'
     if args.method == 'ae':
         runAE(args.dim)
     elif args.method == 'vae':

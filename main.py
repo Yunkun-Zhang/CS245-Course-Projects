@@ -1,6 +1,7 @@
 from dataset import load_data
 from SVM import runSVM
 from selection.Genetic_alg import GA
+from selection.variation_based import FFS
 from projection.auto_encoder import AE, VAE
 import argparse
 
@@ -44,11 +45,22 @@ def runVAE(auto_encoder_dim):
 def runGA():
     print("Starting GA")
     ga = GA(2048, 2, X, X_t, y, y_t)
-    res = ga.update()
-    print(res)
-    # score = runSVM(svm_C, svm_k, X[:, res != 0], y, X_t[:, res != 0], y_t)
-    # with open('result.txt', 'a') as f:
-        # f.write(f'VAE score: {score} (kernel={svm_k})\n')
+    mask = ga.update()
+    X_ga = X[:, mask != 0]
+    Xt_ga = X_t[:, mask != 0]
+    score = runSVM(svm_C, svm_k, X_ga, y, Xt_ga, y_t)
+    with open('result.txt', 'a') as f:
+        f.write(f'GA score: {score} (mask={mask}, kernel={svm_k})\n')
+
+
+def runFFS():
+    print("starting Forward Feature Selection(On Variance)")
+    target_dim = 200
+    ffs = FFS(X, X_t, target_dim)
+    X_ffs, Xt_ffs = ffs.get_new_features()
+    score = runSVM(svm_C, svm_k, X_ffs, y, Xt_ffs, y_t)
+    with open('result.txt', 'a') as f:
+        f.write(f'FFS score: {score} (dim={target_dim}, kernel={svm_k})\n')
 
 
 if __name__ == '__main__':

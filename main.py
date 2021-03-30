@@ -3,6 +3,9 @@ from SVM import runSVM
 from selection.Genetic_alg import GA
 from selection.variation_based import FFS
 from projection.auto_encoder import AE, VAE
+from projection.kernel_PCA import kernelPCA
+from projection.LDA import LDA
+import numpy as np
 import argparse
 
 # params
@@ -10,8 +13,9 @@ svm_C = 5
 svm_k = 'rbf'
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--method', default='ae')
-parser.add_argument('-d', '--dim', default=64)
-parser.add_argument('-b', '--batch', default=128)
+parser.add_argument('-d', '--dim', type=int, default=64)
+parser.add_argument('-b', '--batch', type=int, default=128)
+parser.add_argument('-k', '--kernel', default=128)
 args = parser.parse_args()
 
 print('Loading data...')
@@ -63,6 +67,27 @@ def runFFS():
         f.write(f'FFS score: {score} (dim={target_dim}, kernel={svm_k})\n')
 
 
+def runKernelPCA(kpca_dim, kernel_name):
+    print(f"Starting Kernel-[{kernel_name}]-PCA")
+    len_train = X.shape[1]
+    X_all = np.concatenate([X, X_t], axis=0)
+    kpca = kernelPCA(X_all, kpca_dim, kernel_name)
+    X_kpca_all = kpca.compute()
+    X_kpca, Xt_kpca = X_kpca_all[:len_train], X[len_train:]
+    score = runSVM(svm_C, svm_k, X_kpca, y, Xt_kpca, y_t)
+    with open('result.txt', 'a') as f:
+        f.write(f'Kernal-[{kernel_name}]-PCA score: {score} (dim={kpca_dim}, kernel={svm_k})\n')
+
+
+def runLDA(lda_dim):
+    print("Starting LDA")
+    lda = LDA(X, lda_dim, y, X.shape[1])
+    X_lda, Xt_lda = lda.compute(X, X_t)
+    score = runSVM(svm_C, svm_k, X_lda, y, Xt_lda, y_t)
+    with open('result.txt', 'a') as f:
+        f.write(f'LDA score: {score} (dim={lda_dim}, kernel={svm_k})\n')
+
+
 if __name__ == '__main__':
     if args.method == 'ae':
         runAE(args.dim)
@@ -70,3 +95,7 @@ if __name__ == '__main__':
         runVAE(args.dim)
     elif args.method == 'ga':
         runGA()
+    elif args.method == 'kpca':
+        runKernelPCA(args.dim,args.kernel)
+    elif args == "lda":
+        runLDA(args.dim)

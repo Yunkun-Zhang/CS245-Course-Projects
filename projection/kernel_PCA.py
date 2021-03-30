@@ -1,6 +1,10 @@
-from dataset import load_data
 import numpy as np
+import torch
 import scipy
+import sys
+
+sys.path.append("..")
+from dataset import load_data
 
 
 class kernelPCA:
@@ -16,22 +20,28 @@ class kernelPCA:
         self.s_c = s_c
         assert dim <= data.shape[1]
 
+        if torch.cuda.is_available():
+            self.device = "cuda:0"
+        else:
+            self.device = "cpu"
+
     def _decentralize(self):
         self.data -= np.mean(self.data, axis=0)
+        self.data = torch.tensor(self.data).type(torch.float32).to(self.device)
         print("Decentralization done.")
 
     def _get_kernel_matrix(self):
         if self.kernel_name == "linear":
-            K = np.matmul(self.data, self.data.T)
+            K = torch.mm(self.data, self.data.t())
         elif self.kernel_name == "poly":
-            K = np.power((np.matmul(self.data, self.data.T) + self.p_c), self.p_d)
+            K = torch.pow((torch.mm(self.data, self.data.t()) + self.p_c), self.p_d)
         elif self.kernel_name == "gaussion":
-            D2 = np.sum(self.data * self.data, axis=1, keepdims=True) \
-                 + np.sum(self.data * self.data, axis=1, keepdims=True).T \
-                 - 2 * np.dot(self.data, self.data.T)
-            K = np.exp(-D2 / (2 * self.g_sigma ** 2))
+            D2 = torch.sum(torch.mul(self.data, self.data), dim=1, keepdim=True) \
+                 + torch.sum(torch.mul(self.data, self.data), dim=1, keepdim=True).t() \
+                 - 2 * torch.mm(self.data, self.data.t())
+            K = torch.exp(-D2 / (2 * self.g_sigma ** 2))
         elif self.kernel_name == "sigmoid":
-            K = np.tanh(self.s_alpha * np.dot(self.data, self.data.T) + self.s_c)
+            K = torch.tanh(self.s_alpha * torch.mm(self.data, self.data.t()) + self.s_c)
         else:
             raise ValueError("Not implemented yet")
         print("Compute kernel matrix done.")
@@ -41,33 +51,11 @@ class kernelPCA:
     def compute(self):
         self._decentralize()
         K = self._get_kernel_matrix()
-        e_vals, e_vecs = scipy.sparse.linalg.eigs(K, self.dim, which="LM")
-        print("Eigenvalue decomposition done.")
-        return np.matmul(K, e_vecs)
-
-
-def processed_data_with_kernalPCA(
-        dim,
-        kernel_name="linear",
-        p_c=0, p_d=1,  # parameters for poly kernel
-        g_sigma=1,  # parameters for gaussion kernel
-        s_alpha=1, s_c=0  # parameters for sigmoid kernel
-):
-    X_train, X_test, y_train, y_test = load_data()
-    len_train = X_train.shape[0]
-    X_all = np.concatenate((X_train, X_test), axis=0)
-
-    kpca_instance = kernelPCA(X_all, dim, kernel_name,
-                              p_c=p_c, p_d=p_d,
-                              g_sigma=g_sigma,
-                              s_alpha=s_alpha, s_c=s_c)
-    reduced_data = kpca_instance.compute()
-
-    return np.real(reduced_data[:len_train]), \
-           np.real(reduced_data[len_train:]), \
-           y_train, y_test
+        e_vals, e_vecs = torch.lobpcg(K, k=self.dim, largest=True)
+        return torch.mm(K, e_vecs).to('cpu').numpy()
 
 
 if __name__ == "__main__":
-    a, b, c, d = processed_data_with_kernalPCA(dim=4)
-    print(a[0])
+    X, _, _, _ = load_data("../data")
+    kpca = kernelPCA(X[:10000], 5)
+    kpca.compute()

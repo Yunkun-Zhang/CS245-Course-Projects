@@ -3,6 +3,10 @@ from SVM import runSVM
 from multiprocessing import Pool
 
 
+def get_random_by_rate(rate, size):
+    raw = np.random.uniform(0, 1, size)
+    return (raw < rate).astype(int)
+
 class GA:
     def __init__(self, dim, size, X, X_t, y, y_t, max_iter=5, IR=0.3, CR=0.5, MR=0.5, svm_C=5, svm_k='rbf', SVM_weight=0.75,
                  features_weight=0.25):
@@ -27,12 +31,15 @@ class GA:
         raw = np.random.uniform(0, 1, (self.size, self.dim))
         self.unit_list = (raw < rate).astype(int)
 
-    def get_score_by_id(self, id, X, X_t, y, y_t, svm_weight, features_weight, svm_C=5, svm_k='rbf'):
+    def get_score_by_id(self, id, X, X_t, y, y_t, svm_weight, features_weight, svm_C=5, svm_k='rbf', seed=None):
         mask = self.unit_list[id]
-        print(f"mask with {mask.sum()} 1's")
         X = X[:, mask != 0]
         X_t = X_t[:, mask != 0]
         print(f"current feature dim: {X.shape[1]}")
+        np.random.seed(seed)
+        select_image = get_random_by_rate(0.1, X.shape[0])
+        X = X[select_image == 1, :]
+        print(f"current X length: {X.shape[0]}")
         SVM_score = runSVM(svm_C, svm_k, X, y, X_t, y_t)
         print("score is: ", SVM_score)
         return id, svm_weight*SVM_score + 1/(features_weight*np.sum(mask))
@@ -64,12 +71,12 @@ class GA:
         self.unit_list = np.array(new_unit_list)
 
     # 选择
-    def selection(self):
+    def selection(self, iter_num):
         ps = Pool(self.size)
         result = []
         for id in range(self.size):
             result.append(ps.apply_async(self.get_score_by_id, args=(id, self.X, self.X_t, self.y, self.y_t, self.SVM_weight,
-                                                       self.features_weight, self.svm_C, self.svm_k)))
+                                                       self.features_weight, self.svm_C, self.svm_k, iter_num)))
         ps.close()
         ps.join()
         for i in result:
@@ -78,8 +85,8 @@ class GA:
         self.unit_list = self.unit_list[idx]
 
     def update(self):
-        for _ in range(self.max_iter):
-            self.selection()
+        for i in range(self.max_iter):
+            self.selection(i)
             self.crossover()
             self.mutation()
         # find the best one in the final list of chromosomes

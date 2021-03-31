@@ -2,9 +2,9 @@ from dataset import load_data
 from SVM import runSVM
 from selection.Genetic_alg import GA
 from selection.variation_based import FFS
-from projection.auto_encoder import AE, VAE
-from projection.kernel_PCA import kernelPCA
-from projection.LDA import LDA
+# from projection.auto_encoder import AE, VAE
+# from projection.kernel_PCA import kernelPCA
+# from projection.LDA import LDA
 import numpy as np
 import argparse
 
@@ -48,13 +48,13 @@ def runVAE(auto_encoder_dim):
 
 def runGA():
     print("Starting GA")
-    ga = GA(2048, 5, X, X_t, y, y_t, max_iter=50, IR=0.2)
-    mask = ga.update()
-    X_ga = X[:, mask != 0]
-    Xt_ga = X_t[:, mask != 0]
-    score = runSVM(svm_C, svm_k, X_ga, y.T, Xt_ga, y_t.T)
+    ga = GA(2048, 10, X, X_t, y, y_t, max_iter=50, IR=0.3)
+    mask, score = ga.update()
+    # X_ga = X[:, mask != 0]
+    # Xt_ga = X_t[:, mask != 0]
+    # score = runSVM(svm_C, svm_k, X_ga, y.T, Xt_ga, y_t.T)
     with open('result.txt', 'a') as f:
-        f.write(f'GA score: {score} (mask={mask}, kernel={svm_k})\n')
+        f.write(f'GA score: {score} (mask={mask}, dim = {mask.sum()}, kernel={svm_k})\n')
 
 
 def runFFS():

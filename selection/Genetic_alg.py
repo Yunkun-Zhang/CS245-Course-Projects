@@ -37,8 +37,9 @@ class GA:
         X_t = X_t[:, mask != 0]
         print(f"current feature dim: {X.shape[1]}")
         np.random.seed(seed)
-        select_image = get_random_by_rate(0.1, X.shape[0])
+        select_image = get_random_by_rate(0.05, X.shape[0])
         X = X[select_image == 1, :]
+        y = y[select_image == 1]
         print(f"current X length: {X.shape[0]}")
         SVM_score = runSVM(svm_C, svm_k, X, y, X_t, y_t)
         print("score is: ", SVM_score)

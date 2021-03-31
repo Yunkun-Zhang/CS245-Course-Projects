@@ -33,7 +33,7 @@ class GA:
         X = X[:, mask != 0]
         X_t = X_t[:, mask != 0]
         print(f"current feature dim: {X.shape[1]}")
-        SVM_score = runSVM(svm_C, svm_k, X[:50], y[:50], X_t[:50], y_t[:50])
+        SVM_score = runSVM(svm_C, svm_k, X, y, X_t, y_t)
         print("score is: ", SVM_score)
         return id, svm_weight*SVM_score + 1/(features_weight*np.sum(mask))
 
@@ -93,4 +93,4 @@ class GA:
         for i in result:
             self.scores[i.get()[0]] = i.get()[1]
         max_id = np.argmax(self.scores)
-        return self.unit_list[max_id]
+        return self.unit_list[max_id], np.max(self.scores)

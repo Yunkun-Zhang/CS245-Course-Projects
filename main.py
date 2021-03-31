@@ -48,7 +48,7 @@ def runVAE(auto_encoder_dim):
 
 def runGA():
     print("Starting GA")
-    ga = GA(2048, 2, X, X_t, y, y_t)
+    ga = GA(2048, 5, X, X_t, y, y_t, max_iter=50, IR=0.2)
     mask = ga.update()
     X_ga = X[:, mask != 0]
     Xt_ga = X_t[:, mask != 0]

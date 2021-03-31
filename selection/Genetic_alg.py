@@ -4,7 +4,7 @@ from multiprocessing import Pool
 
 
 class GA:
-    def __init__(self, dim, size, X, X_t, y, y_t, max_iter=5, CR=0.5, MR=0.5, svm_C=5, svm_k='rbf', SVM_weight=0.75,
+    def __init__(self, dim, size, X, X_t, y, y_t, max_iter=5, IR=0.3, CR=0.5, MR=0.5, svm_C=5, svm_k='rbf', SVM_weight=0.75,
                  features_weight=0.25):
         self.MR = MR
         self.CR = CR
@@ -20,14 +20,20 @@ class GA:
         self.SVM_weight = SVM_weight
         self.features_weight = features_weight
         # initialize all chromosomes
-        self.unit_list = np.random.randint(0, 2, (size, dim))
+        self.initialize_by_rate(IR)
         self.scores = np.zeros(size)
+
+    def initialize_by_rate(self, rate):
+        raw = np.random.uniform(0, 1, (self.size, self.dim))
+        self.unit_list = (raw < rate).astype(int)
 
     def get_score_by_id(self, id, X, X_t, y, y_t, svm_weight, features_weight, svm_C=5, svm_k='rbf'):
         mask = self.unit_list[id]
+        print(f"mask with {mask.sum()} 1's")
         X = X[:, mask != 0]
         X_t = X_t[:, mask != 0]
-        SVM_score = runSVM(svm_C, svm_k, X, y, X_t, y_t)
+        print(f"current feature dim: {X.shape[1]}")
+        SVM_score = runSVM(svm_C, svm_k, X[:50], y[:50], X_t[:50], y_t[:50])
         print("score is: ", SVM_score)
         return id, svm_weight*SVM_score + 1/(features_weight*np.sum(mask))
 

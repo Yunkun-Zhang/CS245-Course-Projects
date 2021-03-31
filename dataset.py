@@ -23,8 +23,8 @@ def load_data(path='data'):
     X_train = X_train / np.max(X_train)
     X_test = np.load(path + '/X_test.npy')
     X_test = X_test / np.max(X_test)
-    y_train = np.load(path + '/y_train.npy')
-    y_test = np.load(path + '/y_test.npy')
+    y_train = np.squeeze(np.load(path + '/y_train.npy'))
+    y_test =np.squeeze(np.load(path + '/y_test.npy'))
     return X_train, X_test, y_train, y_test
 
 

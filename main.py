@@ -9,8 +9,8 @@ import numpy as np
 import argparse
 
 # params
-svm_C = 5
-svm_k = 'rbf'
+svm_C = 0.5
+svm_k = 'linear'
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--method', default='ae')
 parser.add_argument('-d', '--dim', type=int, default=64)
@@ -52,7 +52,7 @@ def runGA():
     mask = ga.update()
     X_ga = X[:, mask != 0]
     Xt_ga = X_t[:, mask != 0]
-    score = runSVM(svm_C, svm_k, X_ga, y, Xt_ga, y_t)
+    score = runSVM(svm_C, svm_k, X_ga, y.T, Xt_ga, y_t.T)
     with open('result.txt', 'a') as f:
         f.write(f'GA score: {score} (mask={mask}, kernel={svm_k})\n')
 
@@ -95,6 +95,8 @@ if __name__ == '__main__':
         runVAE(args.dim)
     elif args.method == 'ga':
         runGA()
+    elif args.method == 'ffs':
+        runFFS()
     elif args.method == 'kpca':
         runKernelPCA(args.dim,args.kernel)
     elif args == "lda":

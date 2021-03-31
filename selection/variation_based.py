@@ -8,6 +8,7 @@ class FFS:
         self.dim = dim
 
     def get_new_features(self):
-        var_array = np.var(self.X, axis=1)
+        var_array = np.var(self.X, axis=0)
         index = np.argsort(-var_array)
+        print(self.X[:, index[:self.dim]].shape)
         return self.X[:, index[:self.dim]], self.X_t[:, index[:self.dim]]

@@ -20,8 +20,8 @@ class LDA:
         self.global_mu = torch.mean(self.data, dim=0).to(self.device)
         self.parts = [torch.empty([0, self.ori_dim]).to(self.device) for _ in range(self.classes)]
         for feature, label in zip(self.data, self.labels):
-            self.parts[label[0] - 1] = torch.cat(
-                [self.parts[label[0] - 1], feature.view(1, -1)], dim=0)
+            self.parts[label - 1] = torch.cat(
+                [self.parts[label - 1], feature.view(1, -1)], dim=0)
         self.loacl_mus = [torch.mean(x, dim=0) for x in self.parts]
 
     def compute(self, X, X_t):

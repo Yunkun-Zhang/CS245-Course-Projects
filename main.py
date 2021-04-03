@@ -2,9 +2,11 @@ from dataset import load_data
 from SVM import runSVM
 from selection.Genetic_alg import GA
 from selection.variation_based import FFS
-# from projection.auto_encoder import AE, VAE
-# from projection.kernel_PCA import kernelPCA
-# from projection.LDA import LDA
+from projection.auto_encoder import AE, VAE
+from projection.kernel_PCA import kernelPCA
+from projection.LDA import LDA
+from learning.MDS import myMDS
+from learning.tSNE import myTSNE
 import numpy as np
 import argparse
 
@@ -66,11 +68,11 @@ def runFFS():
 
 def runKernelPCA(kpca_dim, kernel_name):
     print(f"Starting Kernel-[{kernel_name}]-PCA")
-    len_train = X.shape[1]
+    len_train = X.shape[0]
     X_all = np.concatenate([X, X_t], axis=0)
     kpca = kernelPCA(X_all, kpca_dim, kernel_name)
     X_kpca_all = kpca.compute()
-    X_kpca, Xt_kpca = X_kpca_all[:len_train], X[len_train:]
+    X_kpca, Xt_kpca = X_kpca_all[:len_train], X_kpca_all[len_train:]
     score = runSVM(svm_C, svm_k, X_kpca, y, Xt_kpca, y_t)
     with open('result.txt', 'a') as f:
         f.write(f'Kernal-[{kernel_name}]-PCA score: {score} (dim={kpca_dim}, kernel={svm_k})\n')
@@ -85,6 +87,30 @@ def runLDA(lda_dim):
         f.write(f'LDA score: {score} (dim={lda_dim}, kernel={svm_k})\n')
 
 
+def runMDS(mds_dim):
+    print("Starting MDS")
+    len_train = X.shape[0]
+    X_all = np.concatenate([X, X_t], axis=0)
+    mds = myMDS(data=X_all, dim=mds_dim, tol=1e-5, lr=1, max_iter=100, learning=True)
+    X_mds_all = mds.compute()
+    X_mds, Xt_mds = X_mds_all[:len_train], X_mds_all[len_train:]
+    score = runSVM(svm_C, svm_k, X_mds, y, Xt_mds, y_t)
+    with open('result.txt', 'a') as f:
+        f.write(f'MDS score: {score} (dim={mds_dim}, kernel={svm_k})\n')
+
+
+def runTSNE(tsne_dim):
+    print("Starting TSNE")
+    len_train = X.shape[0]
+    X_all = np.concatenate([X[:len_train], X_t], axis=0)
+    tsne = myTSNE(data=X_all, dim=tsne_dim, tol=1e-6, lr=1e-1, max_iter=100)
+    X_tsne_all = tsne.compute()
+    X_tsne, Xt_tsne = X_tsne_all[:len_train], X_tsne_all[len_train:]
+    score = runSVM(svm_C, svm_k, X_tsne, y, Xt_tsne, y_t)
+    with open('result.txt', 'a') as f:
+        f.write(f'TSNE score: {score} (dim={tsne_dim}, kernel={svm_k})\n')
+
+
 if __name__ == '__main__':
     if args.method == 'ae':
         runAE(args.dim)
@@ -95,6 +121,10 @@ if __name__ == '__main__':
     elif args.method == 'ffs':
         runFFS()
     elif args.method == 'kpca':
-        runKernelPCA(args.dim,args.kernel)
-    elif args == "lda":
+        runKernelPCA(args.dim, args.kernel)
+    elif args.method == "lda":
         runLDA(args.dim)
+    elif args.method == "mds":
+        runMDS(args.dim)
+    elif args.method == "tsne":
+        runTSNE(args.dim)

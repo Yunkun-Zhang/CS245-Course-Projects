@@ -50,9 +50,6 @@ def runGA():
     print("Starting GA")
     ga = GA(2048, 10, X, X_t, y, y_t, max_iter=50, IR=0.3)
     mask, score = ga.update()
-    # X_ga = X[:, mask != 0]
-    # Xt_ga = X_t[:, mask != 0]
-    # score = runSVM(svm_C, svm_k, X_ga, y.T, Xt_ga, y_t.T)
     with open('result.txt', 'a') as f:
         f.write(f'GA score: {score} (mask={mask}, dim = {mask.sum()}, kernel={svm_k})\n')
 

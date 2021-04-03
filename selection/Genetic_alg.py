@@ -7,8 +7,9 @@ def get_random_by_rate(rate, size):
     raw = np.random.uniform(0, 1, size)
     return (raw < rate).astype(int)
 
+
 class GA:
-    def __init__(self, dim, size, X, X_t, y, y_t, max_iter=5, IR=0.3, CR=0.5, MR=0.5, svm_C=5, svm_k='rbf', SVM_weight=0.75,
+    def __init__(self, dim, size, X, X_t, y, y_t, max_iter=5, IR=0.3, CR=0.5, MR=0.5, svm_C=5, svm_k='linear', svm_weight=0.9,
                  features_weight=0.25):
         self.MR = MR
         self.CR = CR
@@ -21,7 +22,7 @@ class GA:
         self.y_t = y_t
         self.svm_C = svm_C
         self.svm_k = svm_k
-        self.SVM_weight = SVM_weight
+        self.svm_weight = svm_weight
         self.features_weight = features_weight
         # initialize all chromosomes
         self.initialize_by_rate(IR)
@@ -31,19 +32,21 @@ class GA:
         raw = np.random.uniform(0, 1, (self.size, self.dim))
         self.unit_list = (raw < rate).astype(int)
 
-    def get_score_by_id(self, id, X, X_t, y, y_t, svm_weight, features_weight, svm_C=5, svm_k='rbf', seed=None):
+    def get_score_by_id(self, id, sample_rate=0.05, seed=None):
         mask = self.unit_list[id]
-        X = X[:, mask != 0]
-        X_t = X_t[:, mask != 0]
+        X = self.X[:, mask != 0]
+        X_t = self.X_t[:, mask != 0]
+        y = self.y
         print(f"current feature dim: {X.shape[1]}")
-        np.random.seed(seed)
-        select_image = get_random_by_rate(0.05, X.shape[0])
-        X = X[select_image == 1, :]
-        y = y[select_image == 1]
+        if sample_rate < 1:
+            np.random.seed(seed)
+            select_image = get_random_by_rate(0.05, X.shape[0])
+            X = X[select_image == 1, :]
+            y = self.y[select_image == 1]
         print(f"current X length: {X.shape[0]}")
-        SVM_score = runSVM(svm_C, svm_k, X, y, X_t, y_t)
+        SVM_score = runSVM(self.svm_C, self.svm_k, X, y, X_t, self.y_t)
         print("score is: ", SVM_score)
-        return id, svm_weight*SVM_score + 1/(features_weight*np.sum(mask))
+        return id, self.svm_weight*SVM_score + self.features_weight/np.sum(mask)
 
     def apply_score(self, id, score):
         self.scores[id] = score
@@ -62,10 +65,14 @@ class GA:
     # 交叉
     def crossover(self):
         new_unit_list = []
-        for unit in self.unit_list:
-            child = unit
+        for index in range(len(self.unit_list)):
+            child = self.unit_list[index]
             if np.random.rand() < self.CR:  # Crossover with a possibility of CR
-                mother = self.unit_list[np.random.randint(self.size)]
+                # find a strictly different node
+                new_index = index
+                while index == new_index:
+                    new_index = np.random.randint(self.size)
+                mother = self.unit_list[new_index]
                 cross_point = np.random.randint(0, self.dim)
                 child[cross_point:] = mother[cross_point:]
             new_unit_list.append(child)
@@ -76,8 +83,7 @@ class GA:
         ps = Pool(self.size)
         result = []
         for id in range(self.size):
-            result.append(ps.apply_async(self.get_score_by_id, args=(id, self.X, self.X_t, self.y, self.y_t, self.SVM_weight,
-                                                       self.features_weight, self.svm_C, self.svm_k, iter_num)))
+            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, iter_num)))
         ps.close()
         ps.join()
         for i in result:
@@ -94,8 +100,7 @@ class GA:
         ps = Pool(self.size)
         result = []
         for id in range(self.size):
-            result.append(ps.apply_async(self.get_score_by_id, args=(id, self.X, self.X_t, self.y, self.y_t, self.SVM_weight,
-                                                       self.features_weight, self.svm_C, self.svm_k)))
+            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, None)))
         ps.close()
         ps.join()
         for i in result:

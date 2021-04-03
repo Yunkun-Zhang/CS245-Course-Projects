@@ -2,6 +2,7 @@ import torch
 import openTSNE
 import sys
 import plot_utils
+import numpy as np
 from sklearn.manifold import TSNE
 
 sys.path.append("..")
@@ -32,7 +33,7 @@ class myTSNE:
         # D2_matrix: (#sample, #sample)
         up = torch.pow(D2_matrix + 1, -1)  # (#sample, #sample)
         down = (torch.sum(up, dim=1))  # (#sample)
-        res = torch.div(up,down)
+        res = torch.div(up, down)
         # for i in range(D2_matrix.shape[0]):
         #    res[i][i] = 0
         return res  # (#sample, #sample)
@@ -65,9 +66,9 @@ class myTSNE:
 
 
 if __name__ == "__main__":
-    X, _, y, _ = load_data("../data")
-    tsne = myTSNE(data=X[:10000], dim=2, tol=1e-7, lr=1, max_iter=500)
-    output = tsne.compute()
-    # output = openTSNE.TSNE(verbose=True).fit(X[:2000])
-    plot_utils.plot(output, y[:10000])
+    X, X_t, y, y_t = load_data("../data")
+    # tsne = myTSNE(data=X[:10000], dim=2, tol=1e-7, lr=1, max_iter=500)
+    # output = tsne.compute()
+    output = openTSNE.TSNE(verbose=True).fit(np.concatenate([X, X_t], axis=0))
+    plot_utils.plot(output, np.concatenate([y, y_t], axis=0))
     plt.show()

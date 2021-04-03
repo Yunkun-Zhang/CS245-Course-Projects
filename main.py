@@ -18,6 +18,12 @@ parser.add_argument('-m', '--method', default='ae')
 parser.add_argument('-d', '--dim', type=int, default=64)
 parser.add_argument('-b', '--batch', type=int, default=128)
 parser.add_argument('-k', '--kernel', default=128)
+parser.add_argument('--p_c', type=float, default=0)
+parser.add_argument('--p_d', type=float, default=1)
+parser.add_argument('--g_sigma', type=float, default=1)
+parser.add_argument('--s_alpha', type=float, default=1)
+parser.add_argument('--s_c', type=float, default=0)
+parser.add_argument('--mds_learning', type=bool, default=False)
 args = parser.parse_args()
 
 print('Loading data...')
@@ -66,16 +72,17 @@ def runFFS():
         f.write(f'FFS score: {score} (dim={target_dim}, kernel={svm_k})\n')
 
 
-def runKernelPCA(kpca_dim, kernel_name):
+def runKernelPCA(kpca_dim, kernel_name, p_c, p_d, g_sigma, s_alpha, s_c):
     print(f"Starting Kernel-[{kernel_name}]-PCA")
     len_train = X.shape[0]
     X_all = np.concatenate([X, X_t], axis=0)
-    kpca = kernelPCA(X_all, kpca_dim, kernel_name)
+    kpca = kernelPCA(X_all, kpca_dim, kernel_name, p_c, p_d, g_sigma, s_alpha, s_c)
     X_kpca_all = kpca.compute()
     X_kpca, Xt_kpca = X_kpca_all[:len_train], X_kpca_all[len_train:]
     score = runSVM(svm_C, svm_k, X_kpca, y, Xt_kpca, y_t)
     with open('result.txt', 'a') as f:
-        f.write(f'Kernal-[{kernel_name}]-PCA score: {score} (dim={kpca_dim}, kernel={svm_k})\n')
+        f.write(f'Kernal-[{kernel_name},p_c={p_c},p_d={p_d},g_sigma={g_sigma},s_alpha={s_alpha},'
+                f's_c={s_c}]-PCA score: {score} (dim={kpca_dim}, kernel={svm_k},)\n')
 
 
 def runLDA(lda_dim):
@@ -87,16 +94,17 @@ def runLDA(lda_dim):
         f.write(f'LDA score: {score} (dim={lda_dim}, kernel={svm_k})\n')
 
 
-def runMDS(mds_dim):
+def runMDS(mds_dim, mds_learning):
     print("Starting MDS")
     len_train = X.shape[0]
     X_all = np.concatenate([X, X_t], axis=0)
-    mds = myMDS(data=X_all, dim=mds_dim, tol=1e-5, lr=1, max_iter=100, learning=True)
+    mds = myMDS(data=X_all, dim=mds_dim, tol=1e-6, lr=1e-1, max_iter=100, learning=mds_learning)
     X_mds_all = mds.compute()
     X_mds, Xt_mds = X_mds_all[:len_train], X_mds_all[len_train:]
     score = runSVM(svm_C, svm_k, X_mds, y, Xt_mds, y_t)
+    flag = "learning" if mds_learning else "non-learning"
     with open('result.txt', 'a') as f:
-        f.write(f'MDS score: {score} (dim={mds_dim}, kernel={svm_k})\n')
+        f.write(f'MDS[{flag}] score: {score} (dim={mds_dim}, kernel={svm_k})\n')
 
 
 def runTSNE(tsne_dim):
@@ -121,10 +129,10 @@ if __name__ == '__main__':
     elif args.method == 'ffs':
         runFFS()
     elif args.method == 'kpca':
-        runKernelPCA(args.dim, args.kernel)
+        runKernelPCA(args.dim, args.kernel, args.p_c, args.p_d, args.g_sigma, args.s_alpha, args.s_c)
     elif args.method == "lda":
         runLDA(args.dim)
     elif args.method == "mds":
-        runMDS(args.dim)
+        runMDS(args.dim,args.mds_learning)
     elif args.method == "tsne":
         runTSNE(args.dim)

@@ -10,7 +10,7 @@ def get_random_by_rate(rate, size):
 
 class GA:
     def __init__(self, dim, size, X, X_t, y, y_t, max_iter=5, IR=0.3, CR=0.5, MR=0.5, svm_C=5, svm_k='linear', svm_weight=0.9,
-                 features_weight=0.25):
+                 features_weight=0.1):
         self.MR = MR
         self.CR = CR
         self.max_iter = max_iter
@@ -32,7 +32,7 @@ class GA:
         raw = np.random.uniform(0, 1, (self.size, self.dim))
         self.unit_list = (raw < rate).astype(int)
 
-    def get_score_by_id(self, id, sample_rate=0.05, seed=None):
+    def get_score_by_id(self, id, sample_rate=0.05, only_svm=False, seed=None):
         mask = self.unit_list[id]
         X = self.X[:, mask != 0]
         X_t = self.X_t[:, mask != 0]
@@ -45,6 +45,10 @@ class GA:
             y = self.y[select_image == 1]
         print(f"current X length: {X.shape[0]}")
         SVM_score = runSVM(self.svm_C, self.svm_k, X, y, X_t, self.y_t)
+        if only_svm:
+            return id, SVM_score
+        with open("ga_result.txt", 'a') as f:
+            f.write(f"{id}\t{SVM_score}\t{self.svm_weight*SVM_score + self.features_weight/np.sum(mask)}\n")
         print("score is: ", SVM_score)
         return id, self.svm_weight*SVM_score + self.features_weight/np.sum(mask)
 
@@ -83,7 +87,7 @@ class GA:
         ps = Pool(self.size)
         result = []
         for id in range(self.size):
-            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, iter_num)))
+            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, True, iter_num)))
         ps.close()
         ps.join()
         for i in result:
@@ -100,7 +104,7 @@ class GA:
         ps = Pool(self.size)
         result = []
         for id in range(self.size):
-            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, None)))
+            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, False, None)))
         ps.close()
         ps.join()
         for i in result:

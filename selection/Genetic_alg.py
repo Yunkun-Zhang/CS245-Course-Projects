@@ -9,8 +9,8 @@ def get_random_by_rate(rate, size):
 
 
 class GA:
-    def __init__(self, dim, size, X, X_t, y, y_t, max_iter=5, IR=0.3, CR=0.5, MR=0.5, svm_C=5, svm_k='linear', svm_weight=0.9,
-                 features_weight=0.1):
+    def __init__(self, dim, size, X, X_t, y, y_t, max_iter=5, IR=0.3, CR=0.5, MR=0.5, svm_C=5, svm_k='linear',
+                 svm_weight=0.9, features_weight=0.1):
         self.MR = MR
         self.CR = CR
         self.max_iter = max_iter

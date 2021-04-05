@@ -1,12 +1,12 @@
 from dataset import load_data
-from SVM import runSVM
+from SVM import runSVM, runKFold
 from selection.Genetic_alg import GA
 from selection.variation_based import FFS
-#from projection.auto_encoder import AE, VAE
-#from projection.kernel_PCA import kernelPCA
-#from projection.LDA import LDA
-#from learning.MDS import myMDS
-#from learning.tSNE import myTSNE
+from projection.auto_encoder import AE, VAE
+from projection.kernel_PCA import kernelPCA
+from projection.LDA import LDA
+from learning.MDS import myMDS
+from learning.tSNE import myTSNE
 import numpy as np
 import argparse
 
@@ -30,28 +30,28 @@ print('Loading data...')
 X, X_t, y, y_t = load_data()
 
 
-def runAE(auto_encoder_dim):
+def runAE(auto_encoder_dim, inter=512):
     print('Training auto encoder...')
     ae = AE(auto_encoder_dim)
-    ae.build(X.shape[1])
+    ae.build(X.shape[1], intermediate_dim=inter)
     ae.auto_encoder.summary()
     ae.fit(X, validation_data=X_t)
     X_ae, Xt_ae = ae.predict(X, X_t)
     score = runSVM(svm_C, svm_k, X_ae, y, Xt_ae, y_t)
     with open('result.txt', 'a') as f:
-        f.write(f'AE score: {score} (dim={auto_encoder_dim}, kernel={svm_k})\n')
+        f.write(f'AE score: {score} (dim={auto_encoder_dim}, kernel={svm_k}, C={svm_C}, inter={inter})\n')
 
 
-def runVAE(auto_encoder_dim):
+def runVAE(auto_encoder_dim, inter=1024):
     print('Training validation auto encoder...')
     vae = VAE(auto_encoder_dim)
-    vae.build(X.shape[1])
+    vae.build(X.shape[1], intermediate_dim=inter)
     vae.auto_encoder.summary()
     vae.fit(X, validation_data=X_t)
     X_vae, Xt_vae = vae.predict(X, X_t)
     score = runSVM(svm_C, svm_k, X_vae, y, Xt_vae, y_t)
     with open('result.txt', 'a') as f:
-        f.write(f'VAE score: {score} (dim={auto_encoder_dim}, kernel={svm_k})\n')
+        f.write(f'VAE score: {score} (dim={auto_encoder_dim}, kernel={svm_k}, C={svm_C}, inter={inter})\n')
 
 
 def runGA():
@@ -59,12 +59,11 @@ def runGA():
     ga = GA(2048, 10, X, X_t, y, y_t, max_iter=100, IR=0.1)
     mask, score = ga.update()
     with open('result.txt', 'a') as f:
-        f.write(f'GA score: {score} (mask={mask}, dim = {mask.sum()}, kernel={svm_k}, IR=0.3)\n')
+        f.write(f'GA score: {score} (mask={mask}, dim = {mask.sum()}, kernel={svm_k}, IR=0.1)\n')
 
 
-def runFFS():
+def runFFS(target_dim=200):
     print("starting Forward Feature Selection(On Variance)")
-    target_dim = 200
     ffs = FFS(X, X_t, target_dim)
     X_ffs, Xt_ffs = ffs.get_new_features()
     score = runSVM(svm_C, svm_k, X_ffs, y, Xt_ffs, y_t)
@@ -133,6 +132,6 @@ if __name__ == '__main__':
     elif args.method == "lda":
         runLDA(args.dim)
     elif args.method == "mds":
-        runMDS(args.dim,args.mds_learning)
+        runMDS(args.dim, args.mds_learning)
     elif args.method == "tsne":
         runTSNE(args.dim)

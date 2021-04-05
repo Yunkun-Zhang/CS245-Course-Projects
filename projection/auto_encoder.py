@@ -2,7 +2,6 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense, Lambda
-from tensorflow.keras.losses import binary_crossentropy
 
 
 class AE:
@@ -77,9 +76,9 @@ class VAE(AE):
         self.generator = Model(decoder_input, _x_decoded_mean)
 
         def vae_loss(x, x_decoded_mean):
-            xent_loss = K.binary_crossentropy(x, x_decoded_mean)
-            kl_loss = - 0.5 * K.mean(1 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
-            return xent_loss + kl_loss
+            xent_loss = K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=-1)
+            kl_loss = - 0.5 * K.sum(1 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
+            return K.mean(xent_loss + kl_loss)
 
         self.auto_encoder.compile(optimizer='rmsprop', loss=vae_loss, experimental_run_tf_function=False)
 

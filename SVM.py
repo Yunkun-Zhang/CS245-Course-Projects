@@ -1,4 +1,6 @@
+import numpy as np
 from sklearn.svm import SVC
+from sklearn.model_selection import KFold
 from multiprocessing import Pool
 from dataset import load_data
 
@@ -10,16 +12,23 @@ def runSVM(C, kernel, X_train, y_train, X_test, y_test):
     return score
 
 
-def get_best_C(kernel, X_train, y_train, X_test, y_test):
+def runKFold(X, y, C, kernel, K=5):
+    kf = KFold(n_splits=K)
+    s = 0
+    for (X_train, X_test), (y_train, y_test) in zip(kf.split(X), kf.split(y)):
+        s += runSVM(C, kernel, X[X_train], y[y_train], X[X_test], y[y_test])
+    return s / K
+
+
+def get_best_C(kernel, X, y):
     crange = [0.001, 0.01, 0.1, 1, 10, 100]
     ps = Pool(len(crange))
     for c in crange:
-        ps.apply_async(runSVM, args=(c, kernel, X_train, y_train, X_test, y_test))
+        ps.apply_async(runKFold, args=(X, y, c, kernel, 5))
     ps.close()
     ps.join()
 
 
 if __name__ == '__main__':
     X, X_t, y, y_t = load_data()
-    # runSVM(50, 'rbf', X, y, X_t, y_t)
-    get_best_C('rbf', X, y, X_t, y_t)
+    print(runKFold(X, y, 1, 'linear'))

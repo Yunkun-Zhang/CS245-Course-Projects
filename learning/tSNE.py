@@ -1,7 +1,7 @@
 import torch
 import openTSNE
 import sys
-import plot_utils
+# import plot_utils
 import numpy as np
 from sklearn.manifold import TSNE
 
@@ -12,11 +12,8 @@ from projection.kernel_PCA import kernelPCA
 
 
 class myTSNE:
-    def __init__(self, data, dim, tol, lr, max_iter):
-        if torch.cuda.is_available():
-            self.device = "cuda:0"
-        else:
-            self.device = "cpu"
+    def __init__(self, data, dim, tol, lr, max_iter,device):
+        self.device=device
         self.data = torch.tensor(data).type(torch.float32).to(self.device)
         self.dim = dim
         self.KL_criterion = torch.nn.KLDivLoss(size_average=False)
@@ -70,5 +67,5 @@ if __name__ == "__main__":
     # tsne = myTSNE(data=X[:10000], dim=2, tol=1e-7, lr=1, max_iter=500)
     # output = tsne.compute()
     output = openTSNE.TSNE(verbose=True).fit(np.concatenate([X, X_t], axis=0))
-    plot_utils.plot(output, np.concatenate([y, y_t], axis=0))
-    plt.show()
+    # plot_utils.plot(output, np.concatenate([y, y_t], axis=0))
+    # plt.show()

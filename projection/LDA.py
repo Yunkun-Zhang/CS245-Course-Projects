@@ -4,11 +4,8 @@ import scipy
 
 
 class LDA:
-    def __init__(self, data, dim, labels, ori_dim=2048, classes=50):
-        if torch.cuda.is_available():
-            self.device = "cuda:0"
-        else:
-            self.device = "cpu"
+    def __init__(self, data, dim, labels, ori_dim=2048, device="cuda:0",classes=50):
+        self.device=device
         self.data = torch.tensor(data).to(self.device)
         self.dim = dim
         self.labels = labels
@@ -35,8 +32,11 @@ class LDA:
 
             S_w += torch.mm((self.parts[i] - self.loacl_mus[i]).t(),
                             (self.parts[i] - self.loacl_mus[i]))
+        print("S_w,S_b done.")
         S_wm1S_b = torch.mm(torch.pinverse(S_w), S_b)
+        print("S_w^(-1)S_b done.")
         e_vals, e_vecs = torch.lobpcg(S_wm1S_b, self.dim, largest=True)
+        print("Eigenvalue decomposition done.")
 
         X = torch.tensor(X).type_as(e_vecs).to(self.device)
         X_t = torch.tensor(X_t).type_as(e_vecs).to(self.device)

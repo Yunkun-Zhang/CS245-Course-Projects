@@ -1,6 +1,6 @@
 import torch
 import sys
-import plot_utils
+# import plot_utils
 import matplotlib.pyplot as plt
 from sklearn.manifold import MDS as sMDS
 
@@ -9,11 +9,8 @@ from dataset import load_data
 
 
 class myMDS:
-    def __init__(self, data, dim, tol, lr, max_iter, learning=False):
-        if torch.cuda.is_available():
-            self.device = "cuda:0"
-        else:
-            self.device = "cpu"
+    def __init__(self, data, dim, tol, lr, max_iter, device, learning=False):
+        self.device=device
         self.data = torch.tensor(data).type(torch.float32).to(self.device)
         self.dim = dim
         self.tol = tol
@@ -21,8 +18,6 @@ class myMDS:
         self.max_iter = max_iter
         self.learning = learning
         self.num_sample = self.data.shape[0]
-        self.D = self._distance_matrix(self.data)
-        self.D2 = torch.square(self.D)
 
     def _process_D2(self, matrix):
         diag = torch.diag(matrix)
@@ -37,16 +32,24 @@ class myMDS:
         H = ((torch.eye(self.num_sample) -
               torch.ones(self.num_sample, self.num_sample) / self.num_sample)) \
             .to(self.device)
-        B = -0.5 * torch.mm(torch.mm(H, self.D2), H)
+        print("Get H done.")
+        B = -0.5 * torch.mm(torch.mm(H, torch.square(self._distance_matrix(self.data))), H)
+
+        H.cpu()
+        self.data.cpu()
+        torch.cuda.empty_cache()
+        print("Get B done.")
         return B
 
     def _non_learning(self):
         e_vals, e_vecs = torch.lobpcg(self._get_B(), k=self.dim, largest=True)
+        print("Eigenvalue decomposition done.")
         Lambda_sqrt = torch.eye(self.dim).to(self.device) * torch.sqrt(e_vals)
         res = torch.mm(e_vecs, Lambda_sqrt)
         return res.to("cpu").numpy()
 
     def _learning(self):
+        D = self._distance_matrix(self.data)
         reduced_matrix = torch.rand([self.num_sample, self.dim]).to(self.device)
         reduced_matrix.requires_grad = True
         prev_loss = None
@@ -54,7 +57,7 @@ class myMDS:
         for i in range(self.max_iter):
             optimizer.zero_grad()
             D_pred = self._distance_matrix(reduced_matrix)
-            loss = self._loss(D_pred, self.D)
+            loss = self._loss(D_pred, D)
             print("ITER: ", i)
             print("Loss: ", loss)
             loss.backward()
@@ -83,5 +86,5 @@ if __name__ == "__main__":
 
     # clf2 = sMDS(2)
     # output = clf2.fit_transform(X[:1000])
-    plot_utils.plot(output, y[:10000])
-    plt.show()
+    # plot_utils.plot(output, y[:10000])
+    # plt.show()

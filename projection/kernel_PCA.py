@@ -8,8 +8,8 @@ from dataset import load_data
 
 
 class kernelPCA:
-    def __init__(self, data, dim, kernel_name="linear",
-                 p_c=0, p_d=1, g_sigma=1, s_alpha=1, s_c=0):
+    def __init__(self, data, dim, device, kernel_name="linear",
+                 p_c=0, p_d=1, g_sigma=1, s_alpha=1, s_c=0, ):
         self.kernel_name = kernel_name
         self.data = data
         self.dim = dim
@@ -20,10 +20,7 @@ class kernelPCA:
         self.s_c = s_c
         assert dim <= data.shape[1]
 
-        if torch.cuda.is_available():
-            self.device = "cuda:0"
-        else:
-            self.device = "cpu"
+        self.device = device
 
     def _decentralize(self):
         self.data -= np.mean(self.data, axis=0)
@@ -36,10 +33,7 @@ class kernelPCA:
         elif self.kernel_name == "poly":
             K = torch.pow((torch.mm(self.data, self.data.t()) + self.p_c), self.p_d)
         elif self.kernel_name == "gaussion":
-            D2 = torch.sum(torch.mul(self.data, self.data), dim=1, keepdim=True) \
-                 + torch.sum(torch.mul(self.data, self.data), dim=1, keepdim=True).t() \
-                 - 2 * torch.mm(self.data, self.data.t())
-            K = torch.exp(-D2 / (2 * self.g_sigma ** 2))
+            K = torch.exp(-torch.square(torch.cdist(self.data, self.data)) / (2 * self.g_sigma ** 2))
         elif self.kernel_name == "sigmoid":
             K = torch.tanh(self.s_alpha * torch.mm(self.data, self.data.t()) + self.s_c)
         else:
@@ -52,6 +46,7 @@ class kernelPCA:
         self._decentralize()
         K = self._get_kernel_matrix()
         e_vals, e_vecs = torch.lobpcg(K, k=self.dim, largest=True)
+        print("Eigenvalue decomposition done.")
         return torch.mm(K, e_vecs).to('cpu').numpy()
 
 

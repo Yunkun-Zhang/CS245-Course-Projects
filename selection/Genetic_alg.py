@@ -40,7 +40,7 @@ class GA:
         print(f"current feature dim: {X.shape[1]}")
         if sample_rate < 1:
             np.random.seed(seed)
-            select_image = get_random_by_rate(0.05, X.shape[0])
+            select_image = get_random_by_rate(sample_rate, X.shape[0])
             X = X[select_image == 1, :]
             y = self.y[select_image == 1]
         print(f"current X length: {X.shape[0]}")
@@ -87,7 +87,7 @@ class GA:
         ps = Pool(self.size)
         result = []
         for id in range(self.size):
-            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, True, iter_num)))
+            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, False, iter_num)))
         ps.close()
         ps.join()
         for i in result:
@@ -104,7 +104,7 @@ class GA:
         ps = Pool(self.size)
         result = []
         for id in range(self.size):
-            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, False, None)))
+            result.append(ps.apply_async(self.get_score_by_id, args=(id, 1, True, None)))
         ps.close()
         ps.join()
         for i in result:

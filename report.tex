@@ -262,25 +262,25 @@
 % no \IEEEPARstart
 High-dimensional features has been a hard issue for data scientists in a long period of time. In this work, we evaluated and compared several dimensionality reduction methods, including feature selection, feature projection and feature learning. In order to measure the performance of these methods, we apply it to a 2048-dimension data, and use a SVM classifier to evaluate its performance.
 
-For feature selection methods, we apply forward feature selection, which is rather straightforward, and genetic algorithm, which is harder in comparison. For feature projection methods, we experimented kernel form of principal component analysis(Kernel PCA), linear discriminant analysis(LDA) , auto-encoder(AE) and its variational form(VAE). For feature learning, we analyzed t-distributed stochastic neighborhood embedding(t-SNE) and multi-dimensional scaling(MDS).
+For feature selection methods, we apply forward feature selection, which is rather straightforward, and genetic algorithm, which is harder in comparison. For feature projection methods, we experimented kernel form of principal component analysis (Kernel PCA), linear discriminant analysis (LDA) , auto-encoder (AE) and its variational form (VAE). For feature learning, we analyzed t-distributed stochastic neighborhood embedding (t-SNE) and multi-dimensional scaling (MDS).
 
 The report is organized as follows. In Section~\ref{sec:2}, we introduce the methods we applied in detail; Section~\ref{sec:3} presents our results obtained and analysis of the result. Finally in Section~\ref{sec:4} we conclude this work.
 
 %\hfill mds
- 
+
 %\hfill August 26, 2015
 
 
 \section{Methods}
 \label{sec:2}
-\subsection{Feature Selection} 
-Feature selection is a rather intuitive way to do dimensionality reduction, given its clarity and simplicity. Basic feature selection methods include \textbf{forward and backward feature selecton}, where we either iteratively select or eliminate one feature from the features set until certain criterion is met. A typical advanced feature selection method is \textbf{Genetic Algorithm}, where we simulate the natural process of envolotion to find the optimal subset of features. In this lab work, we experimented with forward feature selection on varience, as well as genetic algorithm to find out the relation between our strategy and its performance.
+\subsection{Feature Selection}
+Feature selection is a rather intuitive way to do dimensionality reduction, given its clarity and simplicity. Basic feature selection methods include \textbf{forward and backward feature selecton}, where we either iteratively select or eliminate one feature from the features set until certain criterion is met. A typical advanced feature selection method is \textbf{Genetic Algorithm}, where we simulate the natural process of evolution to find the optimal subset of features. In this lab work, we experimented with forward feature selection on variance, as well as genetic algorithm to find out the relation between our strategy and its performance.
 ~\\
 \subsubsection{Forward Feature Selection on Variance}
 Forward feature selection iteratively select features from the current feature set on some rule until reaches some criterion. In this lab work we choose ``maximum variance'' as the rule, and set the number of features selected as the termination criterion, namely ``top-k variance''. The method is straightforward and simple, with the advantage of requiring less compilation resources and reduced running time.
 
 \subsubsection{Genetic Algorithm}
-Genetic algorithm is a bio-inspired optimization algorithm, where the natural rule of envolotion is applied to find the optimal individual in the whole population. After initialization of the whole population of chromosomes, the algorithm performs four steps--fitness evaluation, selection, crossover and selection--iteratively, until the termination criterion is met. We define the chromosomes as a 0-1 mask of all features, where 1 indicates the feature is selected, and 0 indicates not. Following we would describe our implementation of all four steps in this lab work.
+Genetic algorithm is a bio-inspired optimization algorithm, where the natural rule of evolution is applied to find the optimal individual in the whole population. After initialization of the whole population of chromosomes, the algorithm performs four steps -- fitness evaluation, selection, crossover and mutation -- iteratively, until the termination criterion is met. We define the chromosomes as a 0-1 mask of all features, where 1 indicates the feature is selected, and 0 indicates not. Following we would describe our implementation of all four steps in this lab work.
 
 For the \textbf{fitness evaluation} part, we design our fitness function as follow:
 $$
@@ -290,9 +290,9 @@ where $S_s, S_f$ are score of the SVM part and features' dimensions part respect
 
 For \textbf{selection}, we first obtain a probability distribution according to the feature scores, and then sample chromosomes base on that distribution. In detail, we take $p = \frac{\mathrm{fitness}(x_n)}{\sum_n \mathrm{fitness}(x_n)}$, then keep sampling from the current chromosomes base on that until it reaches the previous number of chromosomes. We do this regardless of the possibility that some chromosomes might be sampled more than once, i.e. we allow the new population to consist of identical chromosomes.
 
-\textbf{Crossover} means the process of two chromosomes getting mixed together to produce the next generation, i.e. its siblings. For each chromosome in the current population, we randomly select one other chromosome as its mate, and crossover on a randomly selected cross point. That is, the part in front of this cross point is the same as the former chromosome, and the part behind would belong to the latter one.
+\textbf{Crossover} means the process of two chromosomes getting mixed together to produce the next generation, i.e. its offspring. For each chromosome in the current population, we randomly select one other chromosome as its mate, and crossover on a randomly selected cross point. That is, the part in front of this cross point is the same as the former chromosome, and the part behind would belong to the latter one.
 
-Then during \textbf{mutation}, each sibling formed has a certain possibility to mutate, i.e. to have one of its dimension change from $0$ to $1$, or from $1$ to $0$. Note that both mutation and crossover do not happen for granted, but only happen by a certain rate, in order to avoid purely-bad changes that would make the result worse.
+Then during \textbf{mutation}, each offspring formed has a certain possibility to mutate, i.e. to have one of its dimension change from $0$ to $1$, or from $1$ to $0$. Note that both mutation and crossover do not happen for granted, but only happen by a certain rate, in order to avoid purely-bad changes that would make the result worse.
 
 An overall process is shown in Figure~\ref{fig:1}. As a feature selection method, it's way more complex than forward/backward feature selection, and could gain better performance as expected. We would show its performance in later sections. 
 \begin{figure}[htpb]

@@ -22,7 +22,7 @@ def runKFold(X, y, C, kernel, K=5):
 
 
 def get_best_C(kernel, X, y):
-    crange = [0.001, 0.01, 0.1, 1, 10, 100]
+    crange = [10000, 20000, 50000, 100000]
     result = []
     ps = Pool(len(crange))
     for c in crange:
@@ -34,4 +34,7 @@ def get_best_C(kernel, X, y):
 
 if __name__ == '__main__':
     X, X_t, y, y_t = load_data()
-    print(runKFold(X, y, 1, 'linear'))
+    x, xt = np.load('data/X_vae.npy'), np.load('data/Xt_vae.npy')
+    res = get_best_C('rbf', x, y)
+    with open('C.txt', 'a') as f:
+        f.write(f'VAE: k=rbf, {res}\n')

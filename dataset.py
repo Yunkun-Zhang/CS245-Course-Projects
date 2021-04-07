@@ -24,11 +24,10 @@ def load_data(path='data'):
     X_test = np.load(path + '/X_test.npy')
     X_test = X_test / np.max(X_test)
     y_train = np.squeeze(np.load(path + '/y_train.npy'))
-    y_test =np.squeeze(np.load(path + '/y_test.npy'))
+    y_test = np.squeeze(np.load(path + '/y_test.npy'))
     return X_train, X_test, y_train, y_test
 
 
 if __name__ == '__main__':
     divide_data()
     x, _, y, _ = load_data()
-    print(y)

@@ -16,13 +16,15 @@ def runKFold(X, y, C, kernel, K=5):
     kf = KFold(n_splits=K)
     s = 0
     for (X_train, X_test), (y_train, y_test) in zip(kf.split(X), kf.split(y)):
-        s += runSVM(C, kernel, X[X_train], y[y_train], X[X_test], y[y_test])
-        print('.', end='')
+        score = runSVM(C, kernel, X[X_train], y[y_train], X[X_test], y[y_test])
+        s += score
+        with open('C.txt', 'a') as f:
+            f.write(f'{C}, {score}\n')
     return s / K
 
 
 def get_best_C(kernel, X, y):
-    crange = [10000, 20000, 50000, 100000]
+    crange = [0.01, 0.1, 1, 10, 100]
     result = []
     ps = Pool(len(crange))
     for c in crange:
@@ -34,7 +36,10 @@ def get_best_C(kernel, X, y):
 
 if __name__ == '__main__':
     X, X_t, y, y_t = load_data()
-    x, xt = np.load('data/X_vae.npy'), np.load('data/Xt_vae.npy')
-    res = get_best_C('rbf', x, y)
+    res = get_best_C('linear', X, y)
+    print(res)
+    res.sort(key=lambda x: x[1], reverse=True)
+    c = res[0][0]
+    score = runSVM(res[0][0], 'linear', X, y, X_t, y_t)
     with open('C.txt', 'a') as f:
-        f.write(f'VAE: k=rbf, {res}\n')
+        f.write(f'{c}, score = {score}\n')

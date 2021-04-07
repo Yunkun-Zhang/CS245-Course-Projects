@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras.models import Model
@@ -46,7 +47,7 @@ class VAE(AE):
         self.generator = None
         tf.compat.v1.disable_eager_execution()
 
-    def build(self, input_dim, intermediate_dim=512, epsilon_std=1.0):
+    def build(self, input_dim, intermediate_dim=512, epsilon_std=0.2):
         x = Input(shape=(input_dim,))
         h = Dense(intermediate_dim, activation='relu')(x)
         # compute mean and variance of p(Z|X)
@@ -81,6 +82,3 @@ class VAE(AE):
             return K.mean(xent_loss + kl_loss)
 
         self.auto_encoder.compile(optimizer='rmsprop', loss=vae_loss, experimental_run_tf_function=False)
-
-    def fit(self, X_train, epochs=50, batch_size=128, validation_data=None):
-        AE.fit(self, X_train, epochs=epochs, batch_size=batch_size, validation_data=validation_data)

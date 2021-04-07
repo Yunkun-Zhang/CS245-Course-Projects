@@ -3,6 +3,7 @@
 \usepackage[justification=centering]{caption}
 \usepackage{booktabs}
 \usepackage{hyperref}
+\usepackage{amssymb}
 % *** CITATION PACKAGES ***
 %
 \usepackage{cite}
@@ -295,10 +296,9 @@ For \textbf{selection}, we first obtain a probability distribution according to 
 
 Then during \textbf{mutation}, each offspring formed has a certain possibility to mutate, i.e. to have one of its dimension change from $0$ to $1$, or from $1$ to $0$. Note that both mutation and crossover do not happen for granted, but only happen by a certain rate, in order to avoid purely-bad changes that would make the result worse.
 
-An overall process is shown in Figure~\ref{fig:1}. As a feature selection method, it's way more complex than forward/backward feature selection, and could gain better performance as expected. We would show its performance in later sections. 
 \begin{figure}[htpb]
   \centering
-  \includegraphics[width=2.5in]{genetic_alg.jpg}
+  \includegraphics[width=2.5in]{figures/selection/genetic_alg.jpg}
   \caption{process of genetic algorithm}
   \label{fig:1}
   \vspace{-3mm}
@@ -306,32 +306,40 @@ An overall process is shown in Figure~\ref{fig:1}. As a feature selection method
 An overall process is shown in Figure~\ref{fig:1}. As a feature selection method, it's way more complex than forward/backward feature selection, and could gain better performance as expected. We would show its performance in later sections.
 
 \subsection{Feature Projection}
-Feature projection transforms the data to a lower-dimensional space. The transformation can be linear, including methods like \textbf{Principle Component Analysis} and \textbf{Linear Discriminant Analysis}, or nonlinear, including \textbf{Autoencoder}, etc. In this lab work, we experimented with kernel PCA, LDA, and Autoencoder to analyze the performance.
+Feature projection transforms the data to a lower-dimensional space by project it to specific direction(s). The transformation can be linear, including methods like \textbf{Principle Component Analysis} and \textbf{Linear Discriminant Analysis}, or nonlinear, including \textbf{Autoencoder}, etc. In this lab work, we experimented with kernel PCA, LDA, and Autoencoder to analyze the performance.
 ~\\
 \subsubsection{Kernel Principle Component Analysis}
-PCA is an unsupervised learning technique, without knowledge of data classes or labels. The main idea of PCA is to find the optimal direction(s) $\mathbf v$ to maximize the variance of $\mathbf x_i$ projected on $\mathbf v$, so that the principle direction(s) of the data is found. To be more specific, first decentralize the data, i.e., let $\bar {\mathbf x}_i = 0$. Then the variance can be written as
+PCA is an unsupervised learning technique, without knowledge of data classes or labels. The main idea of PCA is to find the optimal direction(s) $\mathbf v$ to maximize the variance of $\mathbf x_i$ projected on $\mathbf v$, so that the principle direction(s) of the data is found (Figure~\ref{fig:pca}). 
+\begin{figure}[htpb]
+  \centering
+  \includegraphics[width=4cm]{figures/projection/pca.png}
+  \caption{Sketch of PCA.}
+  \label{fig:pca}
+\end{figure}
+
+To be more specific, first decentralize the data, i.e., let $\bar {\mathbf x}_i = 0$ by $\mathbf x_i\leftarrow\mathbf x_i-\bar{\mathbf x}_i$. Then the variance can be written as
 $$
-\frac{1}{n}\sum_{i=1}^n (\mathbf v^\top \mathbf x_i)^2 = \frac{1}{n}\mathbf v^\top \mathbf X \mathbf X^\top \mathbf v
+\frac{1}{n}\sum_{i=1}^n (\mathbf v^\mathsf{T} \mathbf x_i)^2 = \frac{1}{n}\mathbf v^\mathsf{T} \mathbf X \mathbf X^\mathsf{T} \mathbf v
 $$
 So the objective is
-$$
-\begin{array}{rl}
-\max_{\mathbf v} & \mathbf v^\top \mathbf X \mathbf X^\top \mathbf v \\
-\mathrm{s.t.} & \mathbf v^\top \mathbf v = 1
-\end{array}
-$$
-Use Lagrangian multiplier to solve the problem:
-$$\mathcal L(\mathbf v) = \mathbf v^\top \mathbf X \mathbf X^\top \mathbf v + \lambda(1 - \mathbf v^\top \mathbf v)$$
-$$\frac{\partial \mathcal L(\mathbf v)}{\partial \mathbf v} = \mathbf X\mathbf X^\top \mathbf v - \lambda \mathbf v = 0$$
-$$\mathbf X\mathbf X^\top \mathbf v = \lambda \mathbf v
-$$
-$\mathbf v$ is the principle eigenvector of $\mathbf X\mathbf X^\top$, so it can be computed by eigen decomposition.
 
-In kernel form of PCA, $\mathbf X$ is substitued with a projection $\phi(\mathbf X)$. Let $\mathbf v = \phi(\mathbf X)\alpha$, and define \emph{kernel matrix} $\mathbf K = \phi(\mathbf X)^\top \phi(\mathbf X)$:
 \begin{align*}
-\mathbf X\mathbf X^\top \mathbf v &= \lambda \mathbf v \\
-\phi(\mathbf X)\phi(\mathbf X)^\top \phi(\mathbf X) \alpha &= \lambda \phi(\mathbf X) \alpha \\
-\phi(\mathbf X)^\top\phi(\mathbf X)\phi(\mathbf X)^\top \phi(\mathbf X) \alpha &= \lambda \phi(\mathbf X)^\top\phi(\mathbf X) \alpha \\
+\max_{\mathbf v} &\ \mathbf v^\mathsf{T} \mathbf X \mathbf X^\mathsf{T} \mathbf v \\
+\mathrm{s.t.} &\ \mathbf v^\mathsf{T} \mathbf v = 1
+\end{align*}
+
+Use Lagrangian multiplier to solve the problem:
+$$\mathcal L(\mathbf v) = \mathbf v^\mathsf{T} \mathbf X \mathbf X^\mathsf{T} \mathbf v + \lambda(1 - \mathbf v^\mathsf{T} \mathbf v)$$
+$$\frac{\partial \mathcal L(\mathbf v)}{\partial \mathbf v} = \mathbf X\mathbf X^\mathsf{T} \mathbf v - \lambda \mathbf v = 0$$
+$$\mathbf X\mathbf X^\mathsf{T} \mathbf v = \lambda \mathbf v
+$$
+$\mathbf v$ is the principle eigenvector of $\mathbf X\mathbf X^\mathsf{T}$, so it can be computed by eigenvalue decomposition.
+
+In kernel form of PCA, $\mathbf X$ is substitued with a projection $\phi(\mathbf X)$ for the intention to map $\mathbf X$ to a higher-dimensional space. Let $\mathbf v = \phi(\mathbf X)\alpha$, and define \emph{kernel matrix} $\mathbf K = \phi(\mathbf X)^\mathsf{T} \phi(\mathbf X)$:
+\begin{align*}
+\mathbf X\mathbf X^\mathsf{T} \mathbf v &= \lambda \mathbf v \\
+\phi(\mathbf X)\phi(\mathbf X)^\mathsf{T} \phi(\mathbf X) \alpha &= \lambda \phi(\mathbf X) \alpha \\
+\phi(\mathbf X)^\mathsf{T}\phi(\mathbf X)\phi(\mathbf X)^\mathsf{T} \phi(\mathbf X) \alpha &= \lambda \phi(\mathbf X)^\mathsf{T}\phi(\mathbf X) \alpha \\
 \mathbf K \mathbf K \alpha &= \lambda \mathbf K\alpha \\
 \mathbf K \alpha &= \lambda \alpha
 \end{align*}
@@ -339,10 +347,129 @@ Similarly, $\alpha$ is the principle eigenvector of $\mathbf K$.
 
 To perform dimensionality reduction, we choose the $k$ largest eigenvalues and the corresponding eigenvectors $\boldsymbol \alpha$, and get the lower-dimensional data by $\mathbf X' = \mathbf K \boldsymbol \alpha$.
 
-In practice, $\phi$ is usually not clear, and we only need to design the kernel $\mathbf K$. We implemented linear, Gaussian, polynomial, and sigmoid kernels, which are commonly used., based on PyTorch.
+In practice, $\phi$ is usually not clear, and we only need to design the \textit{kernel matrix} $\mathbf K$. We implemented linear, Gaussian, polynomial, and sigmoid kernels, which are commonly used, based on PyTorch. The corresponding kernel functions are as follows:
+\begin{align*}
+\textrm{Linear}: \mathbf {K(x,y)} &= \mathbf{x^\mathsf{T} y}\\
+\textrm{Polynomial}: \mathbf {K(x,y)} &= (\mathbf{x^\mathsf{T} y}+c)^d\\
+\textrm{Gaussian}:\mathbf{K(x,y)} &= \exp(-\frac{\|\mathbf{x-y}\|^2}{2\sigma^2})\\
+\textrm{Sigmoid}:\mathbf{K(x,y)} &=\tanh(\alpha \mathbf{x^\mathsf{T} y}+c)
+\end{align*}
+Note that when using linear kernel, kernel PCA is equivalent to the original PCA.
 
 \subsubsection{Linear Discriminant Analysis}
-LDA is a dimensionality reduction technique based on supervised learning.
+LDA is a dimensionality reduction technique based on supervised learning. The main idea of this method is to find the component axis(or axes) $\mathbf v$ that maximize the class separation, in other words we need to minimize the inner-class separation and maximize the inter-class separation(Figure~\ref{fig:lda}). 
+\begin{figure}[htpb]
+  \centering
+  \includegraphics[width=4cm]{figures/projection/lda.png}
+  \caption{Sketch of LDA.}
+  \label{fig:lda}
+\end{figure}
+
+Formally, the inner-class separation matrix and the inter-class separation matrix are defined as follows:
+\begin{align*}
+\mu_i &= \frac{1}{|D_i|}\sum_{\mathbf x^{(k)}\in D_i}\mathbf x^{(k)}\\
+\mu &= \frac{1}{|\mathbf X|}\sum \mathbf x^{(i)}\\
+\mathbf {S_w} &= \sum_{i=1}^{n_\mathrm{labels}}\sum_{\mathbf x^{(k)}\in D_i}(\mathbf x^{(k)}-\mu_i)(\mathbf x^{(k)}-\mu_i)^\mathsf{T}\\
+\mathbf {S_b} &= \sum_{i=1}^{n_\mathrm{labels}}|D_i|(\mu_i-\mu)(\mu_i-\mu)^\mathsf{T},
+\end{align*}
+where $D_i$ is the subset of $\mathbf X$ with label $i$.
+
+We use Fisher discriminative analysis $\ J(\mathbf v) = \mathbf{\frac{v^\mathsf{T} S_b v}{v^\mathsf{T} S_w v}}$ to obtain our objective (the denominator is restricted to be 1 to avoid infinite solutions):
+\begin{align*}
+\max_\mathbf{v} & \ \mathbf{v^\mathsf{T} S_b v}\\
+\mathrm{s.t.} & \ \mathbf{v^\mathsf{T} S_w v}=1
+\end{align*}
+We can solve this problem with Lagrangian multiplier:
+\begin{align*}
+    \mathcal L(\mathbf v) = \mathbf{v^\mathsf{T} S_b v}+\lambda(1-\mathbf{v^\mathsf{T} S_w v}) \\
+    \frac{\partial \mathcal L(\mathbf v)}{\partial \mathbf v} = 2 \mathbf{S_b v}-2\lambda \mathbf{S_w v}=0 \\
+    \mathbf{S_w}^{-1}\mathbf{S_b v}=\mathbf{\lambda v}
+\end{align*}
+So we can see that $\mathbf v$ is the eigenvector of $\mathbf {S_w}^{-1}\mathbf{S_b}$. Similar to PCA, we can take the eigenvectors $\mathbf V$ corresponding to the largest $k$ eigenvalues to calculate the lower-dimensional data by $\mathbf {X'}=\mathbf {V^\mathsf{T} X}$.
+
+\subsubsection{Autoencoder}
+Autoencoder is a simple but efficient method of unsupervised data coding neural network. It learns to copy the input to its output. It has a hidden layer (code) representing the low-dimensional features, and consists of two parts: encoder, from input to code, and decoder, from code to output. Figure~\ref{fig:4} shows the structure of autoencoder.
+\begin{figure}[ht]
+\centering
+\begin{minipage}[ht]{0.38\linewidth}
+\centering
+\includegraphics[height=85pt]{figures/projection/Autoencoder_schema.png}
+\end{minipage}
+\begin{minipage}[ht]{0.5\linewidth}
+\centering
+\includegraphics[height=105pt]{figures/projection/Autoencoder_structure.png}
+\end{minipage}
+\caption{\textbf{Left:} Autoencoder basic schema, inluding only one internal layer $h$. \textbf{Right:} Deeper autoencoder with additional fully connected hidden layers, which we use in experiments.}
+\label{fig:4}
+\end{figure}
+
+Each layer is a combination of linear transformation and nonlinear activation:
+$$
+\mathbf h = \sigma(\mathbf {Wx+b}),
+$$
+where we use a dense layer with ReLU activation function. For the output layer, we use Sigmoid function (input data should be pre-normalized).
+
+\subsubsection{Variational Autoencoder}
+VAEs are directed probabilistic graphical models (DPGM), whose posterior is approximated by a neural network, forming an autoencoder-like architecture. It assumes that the data is generated by distribution $p_{\theta_1}(\mathbf x|\mathbf z)$, and the encoder learns $q_{\theta_2}(\mathbf z|\mathbf x)$ to approximate the posterior distribution $p_{\theta_1}(\mathbf z|\mathbf x)$. Here $\theta_1$ and $\theta_2$ denotes the parameters of the decoder and encoder respectively. Figure~\ref{fig:vae} shows the basic structure of VAE.
+
+\begin{figure}
+    \centering
+    \includegraphics[height=95pt]{figures/projection/vae_structure.png}
+    \caption{VAE Structure}
+    \label{fig:vae}
+\end{figure}
+
+In general, $\mathbf z$ is normally distributed with respect to encoder outputs. Here, like deep autoencoder, we add an extra internal layer $\mathbf h = \mathrm{ReLU}(\mathbf {Wx+b})$, and sample the latent variable as
+$$
+q_{\theta_2}(\mathbf z|\mathbf x) = \mathcal N(\mu(\mathbf h), \sigma^2(\mathbf h)\mathbf I),
+$$
+where $\mu$ and $\sigma^2$ are trainable dense layers whose input is $\mathbf h$. For the decoder, we also add an internal layer $\mathbf h'$, and reconstruct $\mathbf x'$:
+$$
+p_{\theta_1}(\mathbf x'|\mathbf z) = \mathcal N(\mu'(\mathbf h'), {\sigma'}^2(\mathbf h')\mathbf I)
+$$
+
+The objective of VAE consists of KL distance and reconstruction error:
+$$
+\min_{\theta_1,\theta_2} \mathrm{KL}[q_{\theta_2}(\mathbf z|\mathbf x) \| p_{\theta_1}(\mathbf z)] - \mathbb E_{q_{\theta_2}(\mathbf z|\mathbf x)}[\log p_{\theta_1}(\mathbf x|\mathbf z)]
+$$
+
+\subsection{Feature Learning}
+In feature learning, our objective is to find $\mathbf{\tilde{X}} = \arg\min_{\mathbf{\tilde{X}}} L(\mathbf{X,\tilde{X}})$. So this can be regarded as an optimization problem. We do experiments on \textbf{t-SNE} and \textbf{MDS} in this section.
+\subsubsection{Stochastic Neighborhood Embedding with t-distribution}
+
+The main idea of t-SNE is that we want to maintain the relative distance between the samples in the lower-dimensional data space. In practice, t-SNE is one of the most commonly used methods to visualize feature distribution in the 2d or 3d space.
+
+Formally, we calculate the conditional probability of sample $j$ given a sample $i$ in the original data:
+\begin{align*}
+p(j|i) = \frac{(1+\|\mathbf x_i-\mathbf x_j\|^2)^{-1}}{\sum_{k\neq i}(1+||\mathbf x_i-\mathbf x_k||^2)^{-1}}
+\end{align*}
+and similarly in the lower-dimensional data:
+\begin{align*}
+q(j|i)=\frac{(1+||\tilde{\mathbf x}_i-\tilde{\mathbf x}_j||^2)^{-1}}{\sum_{k\neq i}(1+||\tilde{\mathbf x}_i-\tilde{\mathbf x}_k||^2)^{-1}}
+\end{align*}
+
+The objective is to minimize the KL-divergence between $P$ and $Q$:
+\begin{align*}
+    \min_{\tilde{\mathbf X}} L &=\sum_i \mathrm{KL}(P_i\|Q_i) \\
+    &=\sum_i\sum_j p(j|i) \log\frac{p(j|i)}{q(j|i)}
+\end{align*}
+which can be solved by conventional optimization method like gradient decent.
+
+\subsubsection{Multi Dimensional Scaling }
+Similar to t-SNE, MDS also aims at keeping the distance relationship during dimension reduction. However, MDS chooses to measure it with the absolute distance, in other words, it forces the distances between two samples before and after the dimension reduction to be close.
+
+Formally, we calculate the distance matrix $\mathbf{\bar D}$ where
+$$
+\mathbf{\bar D}_{ij}=\|\mathbf x_i-\mathbf x_j\|^2,
+$$
+and calculate inner-product matrix 
+$$
+\mathbf{B}=-\frac{1}{2}\mathbf{H\bar D H}
+$$
+where $\mathbf{H}=\mathbf I - \frac{1}{n}\mathbf{11}^\mathsf{T}$.
+
+We can then obtain $\mathbf{\tilde{X}}$ by $\mathbf{B} =\mathbf{\tilde{X}^\mathsf{T}\tilde{X}}$. This can be done by eigenvalue decomposition of $\mathbf{B}$:  $\mathbf B = \mathbf{V\Lambda V^\mathsf{T}}$, and we can take the eigenvectors $\mathbf{V^\star}$ corresponding to the largest $k$ eigenvalues $\mathbf{\Lambda^\star}$ to reconstruct $\mathbf B$: $\mathbf{B}\approx \mathbf{V^\star \Lambda^\star {V^\star}^\mathsf{T}}$ (this selection minimize the difference between original $\mathbf B$ and the reconstructed $\mathbf B$). So the lower-dimensional data $\mathbf{\tilde{X}}=(\Lambda^\star)^{\frac{1}{2}} \mathbf {V^\star}^\mathsf{T}$.
+
 
 \section{Experiments}
 \label{sec:3}
@@ -353,19 +480,19 @@ images of 50 animal classes with pre-extracted deep learning features for each i
 In all following experiments, we use support vector classifier (SVC) to classify processed data. The implementation is sklearn.svm.SVC. For the pre-extracted deep-learning features, we use linear kernel and experimented with different hyperparameter $C$'s using k-fold validation, and the result is shown in Table~\ref{tab:1}. We observe that setting $C$ as .. results in the best performance, and we use it as the baseline for following sections. In the following experiments, we sometimes tune $C$ or the kernel to search for optimal results. 
 \begin{table}[htbp]
 \centering
-\caption{Parameters in Genetic Algorithm}
+\caption{Scores of SVC using 5-fold validation}
 \label{tab:1}
 \begin{tabular}{cccc}
 \toprule
 C&0.1&1&10 \\  % 表格中的内容，用&分开，\\表示下一行
 \midrule
-Accuracy&0.99&0.99&0.99\\ 
+Score&0.99&0.99&0.99\\ 
 \bottomrule
 \end{tabular}
 \end{table}
 \subsection{Feature Selection}
 \subsubsection{Forward Feature Selection}
-In this part, we experment with different $k$'s in top-$k$ variance feature selection, while at the same time using $5$-fold validation to find the optimal hyperparameter $C$ in SVM. We experimented with $k=100, 200, \ldots, 1000$, and tested with $C = 0.1, 1, 10$ respectively, over two different SVM kernels(\emph{linear} and \emph{rbf}), and record the average score of $5$-fold validation. The results is shown in Figure~\ref{fig:2}. Overall, The score goes high as $k$ increases. However, we also notice that \emph{rbf} kernel performs astonishingly bad for all cases, that even in the best scenario it only gains a 0.6 score with 100 dimensions selected, and drops as $k$ increases. This is probably due to the fact that \emph{rbf} uses the similarity between samples to find support vectors, but as we select those features with most variance, it couldn't perform as well since the similarity would be scarce. Besides that, we observe a reasonable and promising trend of score gains with the increase of dimensions when using \emph{linear} kernel, among which $C=10$ performs the best, while the trend is most observable at $C=0.1$. The highest score we get for this part is $0.9302$ with $C=10$ and $k=1000$, but with larger $k$'s the score would continue to go up, although becoming meaningless when it comes to dimensionality reduction.
+In this part, we experment with different $k$'s in top-$k$ variance feature selection, while at the same time using $5$-fold validation to find the optimal hyperparameter $C$ in SVM. We experimented with $k=100, 200, \ldots, 1000$, and tested with $C = 0.1, 1, 10$ respectively, over two different SVM kernels(\emph{linear} and \emph{rbf}), and record the average score of $5$-fold validation. The results is shown in Figure~\ref{fig:2}. Overall, The score goes high as $k$ increases. However, we also notice that \emph{rbf} kernel performs astonishingly bad for all cases, that even in the best scenario it only gains a 0.6 score with 100 dimensions selected, and drops as $k$ increases. This is probably due to the fact that \emph{rbf} uses the similarity between samples to find support vectors, but as we select those features with most variance, it couldn't perform as well since the similarity would be scarce. Besides that, we observe a reasonable and promising trend of score gains with the increase of dimensions when using \emph{linear} kernel, among which $C=10$ performs the best, while the trend is most observable at $C=0.1$. The highest score we get for this part is $0.9302$ with $C=10$ and $k=1000$, but with larger $k$'s the score would continue to go up, although becoming meaningless when it comes to dimensionality reduction. Applying the same setting to test set results in a final score of $0.9333$. 
 \begin{figure}[htpb]
   \centering
   \includegraphics[width=3.5in]{figures/selection/ffs_result.jpg}
@@ -428,6 +555,21 @@ We also draw the figure of the highest score in each iteration in Figure~\ref{fi
 \subsubsection{Subsubsection Heading Here}
 Subsubsection text here.
 
+\subsection{Feature Projection}
+\subsubsection{Kernal PCA}
+abab
+\subsubsection{LDA}
+abab
+\subsubsection{AE}
+abab
+\subsubsection{VAE}
+abab
+
+\subsection{Feature Learning}
+\subsubsection{t-SNE}
+abab
+\subsubsection{MDS}
+abab
 
 % An example of a floating figure using the graphicx package.
 % Note that \label must occur AFTER (or within) \caption.
@@ -522,6 +664,8 @@ Subsubsection text here.
 % Note that, LaTeX2e, unlike IEEE journals/conferences, places
 % footnotes above bottom floats. This can be corrected via the
 % \fnbelowfloat command of the stfloats package.
+
+
 
 
 

@@ -1,5 +1,6 @@
 \documentclass[journal]{IEEEtran}
 \usepackage{graphicx}
+\usepackage[justification=centering]{caption}
 \usepackage{booktabs}
 \usepackage{hyperref}
 % *** CITATION PACKAGES ***
@@ -292,8 +293,9 @@ For \textbf{selection}, we first obtain a probability distribution according to 
 
 \textbf{Crossover} means the process of two chromosomes getting mixed together to produce the next generation, i.e. its offspring. For each chromosome in the current population, we randomly select one other chromosome as its mate, and crossover on a randomly selected cross point. That is, the part in front of this cross point is the same as the former chromosome, and the part behind would belong to the latter one.
 
-Then during \textbf{mutation}, each offspring formed has a certain possibility to mutate, i.e., to have one of its dimension change from $0$ to $1$, or from $1$ to $0$. Note that both mutation and crossover do not happen for granted, but only happen by a certain rate, in order to avoid purely-bad changes that would make the result worse.
+Then during \textbf{mutation}, each offspring formed has a certain possibility to mutate, i.e. to have one of its dimension change from $0$ to $1$, or from $1$ to $0$. Note that both mutation and crossover do not happen for granted, but only happen by a certain rate, in order to avoid purely-bad changes that would make the result worse.
 
+An overall process is shown in Figure~\ref{fig:1}. As a feature selection method, it's way more complex than forward/backward feature selection, and could gain better performance as expected. We would show its performance in later sections. 
 \begin{figure}[htpb]
   \centering
   \includegraphics[width=2.5in]{genetic_alg.jpg}
@@ -301,7 +303,7 @@ Then during \textbf{mutation}, each offspring formed has a certain possibility t
   \label{fig:1}
   \vspace{-3mm}
 \end{figure}
-An overall process is shown in Figure~\ref{fig:1}. As a feature selection method, it's way more complex than forward/backward feature selection, and could gain better performance as expected. We would show its performance in later sections. 
+An overall process is shown in Figure~\ref{fig:1}. As a feature selection method, it's way more complex than forward/backward feature selection, and could gain better performance as expected. We would show its performance in later sections.
 
 \subsection{Feature Projection}
 Feature projection transforms the data to a lower-dimensional space. The transformation can be linear, including methods like \textbf{Principle Component Analysis} and \textbf{Linear Discriminant Analysis}, or nonlinear, including \textbf{Autoencoder}, etc. In this lab work, we experimented with kernel PCA, LDA, and Autoencoder to analyze the performance.
@@ -363,10 +365,10 @@ Accuracy&0.99&0.99&0.99\\
 \end{table}
 \subsection{Feature Selection}
 \subsubsection{Forward Feature Selection}
-In this part, we experment with different $k$'s in top-$k$ variance feature selection, while at the same time use $k$-fold validation to find the optimal hyperparameter $C$ in SVM. We experimented with $k=100, 200, \ldots, 1000$, and tested with $C = 0.1, 1, 10$ respectively. The results is shown in Figure~\ref{fig:2}. From the Diagram we can see that the score of the SVMs goes high as $k$ increases. Among three SVMs, that with C = 0.1 performs the best, which is more obvious when the dimensionality is low.
+In this part, we experment with different $k$'s in top-$k$ variance feature selection, while at the same time using $5$-fold validation to find the optimal hyperparameter $C$ in SVM. We experimented with $k=100, 200, \ldots, 1000$, and tested with $C = 0.1, 1, 10$ respectively, over two different SVM kernels(\emph{linear} and \emph{rbf}), and record the average score of $5$-fold validation. The results is shown in Figure~\ref{fig:2}. Overall, The score goes high as $k$ increases. However, we also notice that \emph{rbf} kernel performs astonishingly bad for all cases, that even in the best scenario it only gains a 0.6 score with 100 dimensions selected, and drops as $k$ increases. This is probably due to the fact that \emph{rbf} uses the similarity between samples to find support vectors, but as we select those features with most variance, it couldn't perform as well since the similarity would be scarce. Besides that, we observe a reasonable and promising trend of score gains with the increase of dimensions when using \emph{linear} kernel, among which $C=10$ performs the best, while the trend is most observable at $C=0.1$. The highest score we get for this part is $0.9302$ with $C=10$ and $k=1000$, but with larger $k$'s the score would continue to go up, although becoming meaningless when it comes to dimensionality reduction.
 \begin{figure}[htpb]
   \centering
-  \includegraphics[width=2.5in]{genetic_alg.jpg}
+  \includegraphics[width=3.5in]{figures/selection/ffs_result.jpg}
   \caption{Performance of top-k variance}
   \label{fig:2}
   \vspace{-3mm}
@@ -396,25 +398,28 @@ iter&the number of iterations\\
 \centering
 \caption{SVM Scores with Regard to Different Settings of Genetic Algorithm}
 \label{tab:3}
-\begin{tabular}{ccccc}
+\begin{tabular}{cccccc}
 \toprule
 
-pop&IR&CR&C&iter \\  % 表格中的内容，用&分开，\\表示下一行
+pop&IR&CR&C&iter&Score \\  % 表格中的内容，用&分开，\\表示下一行
 \midrule
 
-100&0.1&0.5&1&100 \\
+100&0.1&0.5&0.1&100&0.8862 \\
 
-100&0.1&0.5&5&100 \\
+100&0.1&0.5&5&100&0.7955 \\
 
-100&0.3&0.5&1&100 \\
+100&0.3&0.5&0.1&100&0.9224 \\
 
-100&0.3&0.5&5&100 \\
+100&0.3&0.5&5&100&0.9218 \\
+
+100&0.01&0.5&0.1&100&0.6957 \\
 \bottomrule
 \end{tabular}
 \end{table}
+We also draw the figure of the highest score in each iteration in Figure~\ref{fig:3}. The score doesn't always go up during the process, and for those with large $IR$, The result could be quite good in the beginning, and won't be enhanced much during iterations. Such behavior is reasonable since selecting a larger number of features at the beginning would outperform those with less features. For those who start with lower $IR$'s, there is a clear increase in its score during this process, and could go up higher if the iterations continues. Due to limitation over computation resources, we stop at the number 100, and report a best score of 0.9224 using $pop=10$, $IR = 0.3$, $CR=0.5$ and $C=1$.
 \begin{figure}[htpb]
   \centering
-  \includegraphics[width=2.5in]{genetic_alg.jpg}
+  \includegraphics[width=3.5in]{figures/selection/ga_result.jpg}
   \caption{Best Score Trend in Genetic Algorithm}
   \label{fig:3}
   \vspace{-3mm}

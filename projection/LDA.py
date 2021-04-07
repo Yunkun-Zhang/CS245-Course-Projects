@@ -4,8 +4,8 @@ import scipy
 
 
 class LDA:
-    def __init__(self, data, dim, labels, ori_dim=2048, device="cuda:0",classes=50):
-        self.device=device
+    def __init__(self, data, dim, labels, ori_dim=2048, device="cuda:0", classes=50):
+        self.device = device
         self.data = torch.tensor(data).to(self.device)
         self.dim = dim
         self.labels = labels
@@ -19,7 +19,7 @@ class LDA:
         for feature, label in zip(self.data, self.labels):
             self.parts[label - 1] = torch.cat(
                 [self.parts[label - 1], feature.view(1, -1)], dim=0)
-        self.loacl_mus = [torch.mean(x, dim=0) for x in self.parts]
+        self.local_mus = [torch.mean(x, dim=0) for x in self.parts]
 
     def compute(self, X, X_t):
         self._process_data()
@@ -27,11 +27,11 @@ class LDA:
         S_b = torch.zeros([self.ori_dim, self.ori_dim]).to(self.device)
         for i in range(self.classes):
             S_b += self.parts[i].shape[0] * \
-                   torch.mm((self.loacl_mus[i] - self.global_mu).view(-1, 1),
-                            (self.loacl_mus[i] - self.global_mu).view(1, -1))
+                   torch.mm((self.local_mus[i] - self.global_mu).view(-1, 1),
+                            (self.local_mus[i] - self.global_mu).view(1, -1))
 
-            S_w += torch.mm((self.parts[i] - self.loacl_mus[i]).t(),
-                            (self.parts[i] - self.loacl_mus[i]))
+            S_w += torch.mm((self.parts[i] - self.local_mus[i]).t(),
+                            (self.parts[i] - self.local_mus[i]))
         print("S_w,S_b done.")
         S_wm1S_b = torch.mm(torch.pinverse(S_w), S_b)
         print("S_w^(-1)S_b done.")

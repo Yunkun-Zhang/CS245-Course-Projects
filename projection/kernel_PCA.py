@@ -32,7 +32,7 @@ class kernelPCA:
             K = torch.mm(self.data, self.data.t())
         elif self.kernel_name == "poly":
             K = torch.pow((torch.mm(self.data, self.data.t()) + self.p_c), self.p_d)
-        elif self.kernel_name == "gaussion":
+        elif self.kernel_name == "gaussian":
             K = torch.exp(-torch.square(torch.cdist(self.data, self.data)) / (2 * self.g_sigma ** 2))
         elif self.kernel_name == "sigmoid":
             K = torch.tanh(self.s_alpha * torch.mm(self.data, self.data.t()) + self.s_c)

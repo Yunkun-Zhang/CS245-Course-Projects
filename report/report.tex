@@ -183,9 +183,9 @@
 \title{Worship Analysis}
 
 
-\author{,~\IEEEmembership{Member,~IEEE,}
-        John~Doe,~\IEEEmembership{Fellow,~OSA,}
-        and~Jane~Doe,~\IEEEmembership{Life~Fellow,~IEEE}}
+\author{Yunkun~Zhang,
+        Junlong~Li,
+        and~Zhehan~Qu}%~\IEEEmembership{Life~Fellow,~IEEE}}
 %\thanks{M. Shell was with the Department
 %of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta,
 %GA, 30332 USA e-mail: (see http://www.michaelshell.org/contact.html).}% <-this % stops a space
@@ -292,9 +292,8 @@ For \textbf{selection}, we first obtain a probability distribution according to 
 
 \textbf{Crossover} means the process of two chromosomes getting mixed together to produce the next generation, i.e. its offspring. For each chromosome in the current population, we randomly select one other chromosome as its mate, and crossover on a randomly selected cross point. That is, the part in front of this cross point is the same as the former chromosome, and the part behind would belong to the latter one.
 
-Then during \textbf{mutation}, each offspring formed has a certain possibility to mutate, i.e. to have one of its dimension change from $0$ to $1$, or from $1$ to $0$. Note that both mutation and crossover do not happen for granted, but only happen by a certain rate, in order to avoid purely-bad changes that would make the result worse.
+Then during \textbf{mutation}, each offspring formed has a certain possibility to mutate, i.e., to have one of its dimension change from $0$ to $1$, or from $1$ to $0$. Note that both mutation and crossover do not happen for granted, but only happen by a certain rate, in order to avoid purely-bad changes that would make the result worse.
 
-An overall process is shown in Figure~\ref{fig:1}. As a feature selection method, it's way more complex than forward/backward feature selection, and could gain better performance as expected. We would show its performance in later sections. 
 \begin{figure}[htpb]
   \centering
   \includegraphics[width=2.5in]{genetic_alg.jpg}
@@ -302,6 +301,46 @@ An overall process is shown in Figure~\ref{fig:1}. As a feature selection method
   \label{fig:1}
   \vspace{-3mm}
 \end{figure}
+An overall process is shown in Figure~\ref{fig:1}. As a feature selection method, it's way more complex than forward/backward feature selection, and could gain better performance as expected. We would show its performance in later sections. 
+
+\subsection{Feature Projection}
+Feature projection transforms the data to a lower-dimensional space. The transformation can be linear, including methods like \textbf{Principle Component Analysis} and \textbf{Linear Discriminant Analysis}, or nonlinear, including \textbf{Autoencoder}, etc. In this lab work, we experimented with kernel PCA, LDA, and Autoencoder to analyze the performance.
+~\\
+\subsubsection{Kernel Principle Component Analysis}
+PCA is an unsupervised learning technique, without knowledge of data classes or labels. The main idea of PCA is to find the optimal direction(s) $\mathbf v$ to maximize the variance of $\mathbf x_i$ projected on $\mathbf v$, so that the principle direction(s) of the data is found. To be more specific, first decentralize the data, i.e., let $\bar {\mathbf x}_i = 0$. Then the variance can be written as
+$$
+\frac{1}{n}\sum_{i=1}^n (\mathbf v^\top \mathbf x_i)^2 = \frac{1}{n}\mathbf v^\top \mathbf X \mathbf X^\top \mathbf v
+$$
+So the objective is
+$$
+\begin{array}{rl}
+\max_{\mathbf v} & \mathbf v^\top \mathbf X \mathbf X^\top \mathbf v \\
+\mathrm{s.t.} & \mathbf v^\top \mathbf v = 1
+\end{array}
+$$
+Use Lagrangian multiplier to solve the problem:
+$$\mathcal L(\mathbf v) = \mathbf v^\top \mathbf X \mathbf X^\top \mathbf v + \lambda(1 - \mathbf v^\top \mathbf v)$$
+$$\frac{\partial \mathcal L(\mathbf v)}{\partial \mathbf v} = \mathbf X\mathbf X^\top \mathbf v - \lambda \mathbf v = 0$$
+$$\mathbf X\mathbf X^\top \mathbf v = \lambda \mathbf v
+$$
+$\mathbf v$ is the principle eigenvector of $\mathbf X\mathbf X^\top$, so it can be computed by eigen decomposition.
+
+In kernel form of PCA, $\mathbf X$ is substitued with a projection $\phi(\mathbf X)$. Let $\mathbf v = \phi(\mathbf X)\alpha$, and define \emph{kernel matrix} $\mathbf K = \phi(\mathbf X)^\top \phi(\mathbf X)$:
+\begin{align*}
+\mathbf X\mathbf X^\top \mathbf v &= \lambda \mathbf v \\
+\phi(\mathbf X)\phi(\mathbf X)^\top \phi(\mathbf X) \alpha &= \lambda \phi(\mathbf X) \alpha \\
+\phi(\mathbf X)^\top\phi(\mathbf X)\phi(\mathbf X)^\top \phi(\mathbf X) \alpha &= \lambda \phi(\mathbf X)^\top\phi(\mathbf X) \alpha \\
+\mathbf K \mathbf K \alpha &= \lambda \mathbf K\alpha \\
+\mathbf K \alpha &= \lambda \alpha
+\end{align*}
+Similarly, $\alpha$ is the principle eigenvector of $\mathbf K$.
+
+To perform dimensionality reduction, we choose the $k$ largest eigenvalues and the corresponding eigenvectors $\boldsymbol \alpha$, and get the lower-dimensional data by $\mathbf X' = \mathbf K \boldsymbol \alpha$.
+
+In practice, $\phi$ is usually not clear, and we only need to design the kernel $\mathbf K$. We implemented linear, Gaussian, polynomial, and sigmoid kernels, which are commonly used., based on PyTorch.
+
+\subsubsection{Linear Discriminant Analysis}
+LDA is a dimensionality reduction technique based on supervised learning.
 
 \section{Experiments}
 \label{sec:3}
@@ -334,7 +373,7 @@ In this part, we experment with different $k$'s in top-$k$ variance feature sele
 \end{figure}
 
 \subsubsection{Genetic Algorithm}
-We implement the genetic algorithm with several hyperparameter to be tuned(see Table~\ref{tab:2} for details). Due to the limitation of computation resources, we fix the weight of two scores in our fitness function($w_s$ and $w_f$) to be $0.9$ and $0.1$ respectively, as well as the mutation rate to be $0.5$, and tune the initialization rate(i.e. how many features are selected at first), initialization population, and crossover rate. We also tried different $C$'s when calculating the SVM score $S_s$. The results are shown in Table~\ref{tab:3}. We observe a trend that bigger $IR$ results in higher score, and among different settings, $C=0.1$ seems to perform better than $C=5$. This might due to the fact that once feature dimensions get decreased, data points would become more likely to locate beyond the margin, thus requiring a smaller $C$. We also draw the figure of the highest score in each iteration in Figure~\ref{fig:3}
+We implement the genetic algorithm with several hyperparameter to be tuned (see Table~\ref{tab:2} for details). Due to the limitation of computation resources, we fix the weight of two scores in our fitness function ($w_s$ and $w_f$) to be $0.9$ and $0.1$ respectively, as well as the mutation rate to be $0.5$, and tune the initialization rate (i.e., how many features are selected at first), initialization population, and crossover rate. We also tried different $C$'s when calculating the SVM score $S_s$. The results are shown in Table~\ref{tab:3}. We observe a trend that bigger $IR$ results in higher score, and among different settings, $C=0.1$ seems to perform better than $C=5$. This might due to the fact that once feature dimensions get decreased, data points would become more likely to locate beyond the margin, thus requiring a smaller $C$. We also draw the figure of the highest score in each iteration in Figure~\ref{fig:3}.
 \begin{table}[htbp]
 \centering
 \caption{Parameters in Genetic Algorithm}
